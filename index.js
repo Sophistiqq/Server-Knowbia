@@ -1,7 +1,7 @@
 import express from 'express';
 const app = express();
 import './dbconfig.js'
-const path = require('path');
+import path from 'path';
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json());
