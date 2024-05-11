@@ -4,13 +4,13 @@ import connection from './dbconfig.js'
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json());
+app.set('view engine', 'ejs');
 
 app.get('/', (req, res) => {
-  res.json({ message: 'Hello World'})
+  res.render('index')
 })
 
 
 
-console.log("Hello")
 
 export default app;
