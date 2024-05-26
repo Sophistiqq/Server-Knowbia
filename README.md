@@ -1,4 +1,4 @@
-# serverknowbia
+# Server QDS
 
 To install dependencies:
 
@@ -13,4 +13,4 @@ bun run index.js
 ```
 
 This project was created using `bun init` in bun v1.1.7. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
-# Server-Knowbia
+# Server QDS
