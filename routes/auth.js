@@ -1,4 +1,3 @@
-
 import { Router } from 'express';
 const router = Router();
 import { createConnection } from 'mysql2';
@@ -6,25 +5,9 @@ import { config } from 'dotenv';
 import { hashSync, compareSync } from 'bcrypt';
 config();
 import connection from '../dbconfig.js';
+import jwt from 'jsonwebtoken';
 
-
-//| students | CREATE TABLE "students" (
-//  "student_id" varchar(50) NOT NULL,
-//  "firstname" varchar(255) NOT NULL,
-//  "lastname" varchar(255) NOT NULL,
-//  "email" varchar(255) NOT NULL,
-//  "hashed_password" varchar(255) NOT NULL,
-//  "verified" tinyint(1) DEFAULT '0',
-//  "phone_number" varchar(15) DEFAULT NULL,
-//  "year_level" int DEFAULT NULL,
-//  "sex" enum('Male','Female','Other') NOT NULL,
-//  "suffix" varchar(10) DEFAULT NULL,
-//  "birthday" date DEFAULT NULL,
-//  "created_at" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-//  "updated_at" timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-//  PRIMARY KEY ("student_id"),
-//  UNIQUE KEY "email" ("email")
-//) |
+const JWT_SECRET = process.env.JWT_SECRET;
 
 
 router.post('/register', (req, res) => {
@@ -68,21 +51,47 @@ router.post('/register', (req, res) => {
 });
 
 
-router.post('/login', (req, res) => {
-  // logging in using student id and password
-  const { student_id, password } = req.body;
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
 
-  const query = `SELECT * FROM students WHERE student_id = ?`;
-  connection.query(query, [student_id], (err, result) => {
+  if (token == null) return res.sendStatus(401); // No token provided
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403); // Invalid token
+    req.user = user;
+    next(); // Proceed to the next middleware or route handler
+  });
+}
+
+router.post('/login', (req, res) => {
+  const { student_number, password } = req.body;
+
+  console.log('Received Student Number:', student_number); // Log received student number
+  console.log('Received Password:', password); // Log received password
+
+  const query = `SELECT * FROM students WHERE student_number = ?`;
+  connection.query(query, [student_number], (err, result) => {
     if (err) {
-      console.log(err);
+      console.log('Database Error:', err);
       res.status(500).json({ message: 'An error occurred', error: err });
     } else {
+      console.log('Query Result:', result); // Log the result of the query
+
       if (result.length > 0) {
         const student = result[0];
+        console.log('Student Found:', student); // Log the student details
+
         const passwordMatch = compareSync(password, student.hashed_password);
+        console.log('Password Match:', passwordMatch); // Log whether passwords match
+
         if (passwordMatch) {
-          res.status(200).json({ message: 'Login successful', student });
+          const token = jwt.sign(
+            { student_number: student.student_number },
+            JWT_SECRET,
+            { expiresIn: '12h' }
+          );
+          res.status(200).json({ message: 'Login successful', token });
         } else {
           res.status(401).json({ message: 'Invalid credentials' });
         }
@@ -92,13 +101,13 @@ router.post('/login', (req, res) => {
     }
   });
 });
-
-
+// Middleware to authenticate requests
 // router to test the registration of a student
 
 router.get('/register', (req, res) => {
   res.render('register.ejs');
 });
+
 
 
 
