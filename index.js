@@ -1,8 +1,9 @@
 import express from 'express';
 const app = express();
 import path from 'path';
+import cors from 'cors'
 
-
+app.use(cors())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json());
 app.set('view engine', 'ejs');
