@@ -13,8 +13,6 @@ app.get('/page', (req, res) => {
   res.render('page.ejs');
 })
 
-import router from './routes/auth.js'
-app.use('/auth', router);
 // use the auth/ route
 import auth from './routes/auth.js'
 app.use('/auth', auth)
