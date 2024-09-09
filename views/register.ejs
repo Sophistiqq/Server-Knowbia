@@ -7,57 +7,128 @@
 </head>
 <body>
   
-<!--CREATE TABLE students (-->
-<!--    student_id INT AUTO_INCREMENT PRIMARY KEY,-->
-<!--    firstname VARCHAR(255) NOT NULL,-->
-<!--    lastname VARCHAR(255) NOT NULL,-->
-<!--    email VARCHAR(255) UNIQUE NOT NULL,-->
-<!--    hashed_password VARCHAR(255) NOT NULL,-->
-<!--    verified BOOLEAN DEFAULT FALSE,-->
-<!--    phone_number VARCHAR(15),-->
-<!--    year_level INT,-->
-<!--    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,-->
-<!--    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP-->
-<!--);-->
-  <!-- Register form -->
-  <form class="regForm">
-    <input type="text" name="firstname" placeholder="First Name" required>
-    <input type="text" name="lastname" placeholder="Last Name" required>
-    <input type="email" name="email" placeholder="Email" required>
-    <input type="password" name="password" placeholder="Password" required>
-    <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-    <input type="text" name="phone_number" placeholder="Phone Number">
-    <input type="number" name="year_level" placeholder="Year Level">
-    <button type="submit">Register</button>
-  </form>
+<form class="regForm">
+    <label for="student_number">Student Number:</label>
+    <input type="text" id="student_number" name="student_number" maxlength="8" oninput="formatStudentNumber(this)" pattern="\d{2}-\d{5}" title="Enter a valid student number in the format YY-NNNNN (e.g., 21-00564)" required>
+    
+    <label for="firstname">First Name:</label>
+    <input type="text" id="firstname" name="firstname" pattern="[A-Za-z]{1,255}" title="First name should only contain letters" required>
+    
+    <label for="lastname">Last Name:</label>
+    <input type="text" id="lastname" name="lastname" pattern="[A-Za-z]{1,255}" title="Last name should only contain letters" required>
+      
+    <label for="middle_name">Middle Name:</label>
+    <input type="text" id="middle_name" name="middle_name" pattern="[A-Za-z]{1,255}" title="Middle name should only contain letters" required>
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" title="Enter a valid email address" required>
+    
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" pattern="(?=.*[a-zA-Z])(?=.*\d)(?=.*[\W_]).{8,}" title="Password must be at least 8 characters long, include a letter, a number, and a special character" required>
+
+    <label for="confirm_password">Confirm Password:</label>
+    <input type="password" id="confirm_password" name="confirm_password" required>
+
+
+    <label for="phone_number">Phone Number:</label>
+    <input type="tel" id="phone_number" name="phone_number" pattern="\+?\d{10,15}" title="Enter a valid phone number with 11 digits" placeholder="+639">
+    
+    <label for="year_level">Year Level:</label>
+    <select id="year_level" name="year_level" required>
+        <option value="" disabled selected>Select</option>
+        <option value="1">1st</option>
+        <option value="2">2nd</option>
+        <option value="3">3rd</option>
+        <option value="4">4th</option>
+    </select>
+    <label for="sex">Sex:</label>
+    <select id="sex" name="sex" required>
+        <option value="" disabled selected>Select</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+    </select>
+    
+    <label for="suffix">Suffix (e.g., Jr., Sr., II):</label>
+    <input type="text" id="suffix" name="suffix" pattern="[A-Za-z]+( Jr\.| Sr\.| II| III| IV)?" title="Enter a suffix like Jr., Sr., II, etc.">
+    
+    <label for="birthday">Birthday:</label>
+    <input type="date" id="birthday" name="birthday" max="<?php echo date('Y-m-d'); ?>" title="Enter a valid date of birth">
+    
+    <button type="submit">Submit</button>
+</form>
 
 </body>
 <script>
   const regForm = document.querySelector('.regForm');
   const regFormInputs = regForm.querySelectorAll('input');
+  const passwordInput = document.getElementById('password');
+  const confirmPasswordInput = document.getElementById('confirm_password');
 
   regForm.addEventListener('submit', (e) => {
-    e.preventDefault();
+      e.preventDefault();
 
-    const formData = new FormData(regForm);
-    const formValues = Object.fromEntries(formData.entries());
-    console.log(formValues);
-    
-    fetch('/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formValues)
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data);
-    })
-    .catch(error => {
-      console.error('Error:', error);
-    });
+      // Check if passwords match
+      if (passwordInput.value !== confirmPasswordInput.value) {
+          alert('Passwords do not match. Please try again.');
+          return; // Prevent form submission if passwords don't match
+      }
+
+      const formData = new FormData(regForm);
+      const formValues = Object.fromEntries(formData.entries());
+
+      fetch('/auth/register', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formValues)
+      })
+      .then(response => response.json())
+      .then(data => {
+          alert(data.message);
+      })
+      .catch(error => {
+          alert(error.message);
+      });
   });
 
+  function formatStudentNumber(input) {
+    // Get the current value
+    let value = input.value.replace(/\D/g, ''); // Remove non-digit characters
+    
+    // Insert hyphen after the 2nd digit
+    if (value.length > 2) {
+        value = value.slice(0, 2) + '-' + value.slice(2);
+    }
+
+    // Update the input value
+    input.value = value.slice(0, 8); // Limit to 8 characters in total
+  }
+  function validatePasswords() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    if (password !== confirmPassword) {
+        alert('Passwords do not match. Please try again.');
+        return false; // Prevent form submission
+    }
+    return true; // Allow form submission
+  }
   </script>
+
+<style>
+  .regForm {
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    margin: 0 auto;
+  }
+  input {
+    padding-block: 5px;
+  }
+  select {
+    padding-block: 5px;
+  }
+  </style>
 </html>
