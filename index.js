@@ -1,10 +1,11 @@
 import express from 'express';
 const app = express();
+import path from 'path';
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json());
 app.set('view engine', 'ejs');
-app.set('views', './views');
+app.set('views', path.join(__dirname, 'views'));
 
 
 app.get('/', (req, res) => {
