@@ -49,8 +49,17 @@ router.post('/register', (req, res) => {
 
   connection.query(query, [student_number, firstname, lastname, middle_name, email, hashed_password, phone_number, year_level, sex, suffix, birthday, verified], (err, result) => {
     if (err) {
-      console.log(err);
-      res.status(500).json({ message: 'An error occurred', error: err });
+      console.error("Database insertion error:", err);
+      let errorMessage = "An error occurred during registration.";
+
+      // Provide more specific error messages based on the type of error
+      if (err.code === 'ER_DUP_ENTRY') {
+        errorMessage = 'The student number or email already exists.';
+      } else if (err.code === 'ER_BAD_FIELD_ERROR') {
+        errorMessage = 'Invalid field specified.';
+      }
+
+      res.status(500).json({ message: errorMessage, error: err });
     } else {
       console.log(result);
       res.status(201).json({ message: 'Student registered' });

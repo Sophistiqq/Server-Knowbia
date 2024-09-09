@@ -86,10 +86,15 @@
       })
       .then(response => response.json())
       .then(data => {
+        if (data.error) {
+          alert(`Error: ${data.message}`);
+        } else {
           alert(data.message);
+        }
       })
       .catch(error => {
-          alert(error.message);
+        alert('An error occurred. Please try again.');
+        console.error('Error:', error);
       });
   });
 
