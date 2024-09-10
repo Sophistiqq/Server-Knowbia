@@ -64,6 +64,12 @@ function authenticateToken(req, res, next) {
   });
 }
 
+// Validate token route
+router.get('/auth/validate', authenticateToken, (req, res) => {
+  res.status(200).json({ message: 'Token is valid', user: req.user });
+});
+
+
 router.post('/login', (req, res) => {
   const { student_number, password } = req.body;
 

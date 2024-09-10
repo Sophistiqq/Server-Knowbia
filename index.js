@@ -3,6 +3,14 @@ const app = express();
 import path from 'path';
 import cors from 'cors'
 
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:; connect-src *"
+  );
+  next();
+});
+
 app.use(cors())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json());
