@@ -1,8 +1,16 @@
 import express from 'express';
-const app = express();
+import cors from 'cors';
 import path from 'path';
-import cors from 'cors'
 
+const app = express();
+
+// CORS configuration
+app.use(cors({
+  origin: "http://localhost:5173", // Use the exact frontend URL
+  credentials: true // Allow cookies and credentials
+}));
+
+// Set security headers (optional, for Content Security Policy)
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
@@ -11,23 +19,24 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Serve static files (if needed)
+// app.use(express.static('public'));
+
+// Routes
+import auth from './routes/auth.js'; // Your auth routes
+app.use('/auth', auth);
 
 app.get('/', (req, res) => {
-  res.render('index.ejs')
-})
+  res.render('index.ejs');
+});
 
 app.get('/page', (req, res) => {
   res.render('page.ejs');
-})
-
-// use the auth/ route
-import auth from './routes/auth.js'
-app.use('/auth', auth)
+});
 
 export default app;

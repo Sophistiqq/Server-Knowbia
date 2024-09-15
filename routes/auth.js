@@ -1,120 +1,100 @@
 import { Router } from 'express';
-const router = Router();
-import { createConnection } from 'mysql2';
-import { config } from 'dotenv';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
 import { hashSync, compareSync } from 'bcrypt';
-config();
-import connection from '../dbconfig.js';
 import jwt from 'jsonwebtoken';
+import connection from '../dbconfig.js'; // Your database connection
+import { config } from 'dotenv';
+
+config();
+const router = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// Set up cookie-parser and session middleware
+router.use(cookieParser());
+router.use(session({
+  secret: process.env.SESSION_SECRET || 'mySecret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false, // Set to true in production with HTTPS
+    httpOnly: true, // Prevent client-side access to the cookie
+    maxAge: 12 * 60 * 60 * 1000 // Session duration: 12 hours
+  }
+}));
 
+// Register route
 router.post('/register', (req, res) => {
-  const {
-    student_number,
-    firstname,
-    lastname,
-    middle_name,
-    email,
-    password,
-    phone_number,
-    year_level,
-    sex,
-    suffix,
-    birthday,
-    verified = false // default to false if not provided
-  } = req.body;
-
+  const { student_number, firstname, lastname, middle_name, email, password, phone_number, year_level, sex, suffix, birthday } = req.body;
   const hashed_password = hashSync(password, 10);
+  
+  const query = `INSERT INTO students (student_number, firstname, lastname, middle_name, email, hashed_password, phone_number, year_level, sex, suffix, birthday, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, false)`;
 
-  const query = `INSERT INTO students (student_number, firstname, lastname, middle_name, email, hashed_password, phone_number, year_level, sex, suffix, birthday, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-  connection.query(query, [student_number, firstname, lastname, middle_name, email, hashed_password, phone_number, year_level, sex, suffix, birthday, verified], (err, result) => {
+  connection.query(query, [student_number, firstname, lastname, middle_name, email, hashed_password, phone_number, year_level, sex, suffix, birthday], (err, result) => {
     if (err) {
-      console.error("Database insertion error:", err);
-      let errorMessage = "An error occurred during registration.";
-
-      // Provide more specific error messages based on the type of error
-      if (err.code === 'ER_DUP_ENTRY') {
-        errorMessage = 'The student number or email already exists.';
-      } else if (err.code === 'ER_BAD_FIELD_ERROR') {
-        errorMessage = 'Invalid field specified.';
-      }
-
-      res.status(500).json({ message: errorMessage, error: err });
+      const errorMessage = err.code === 'ER_DUP_ENTRY' ? 'The student number or email already exists.' : 'An error occurred during registration.';
+      res.status(500).json({ message: errorMessage });
     } else {
-      console.log(result);
-      res.status(201).json({ message: 'Student registered' });
+      res.status(201).json({ message: 'Student registered successfully' });
     }
   });
 });
 
-
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
-
-  if (token == null) return res.sendStatus(401); // No token provided
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403); // Invalid token
-    req.user = user;
-    next(); // Proceed to the next middleware or route handler
-  });
-}
-
-// Validate token route
-router.get('/auth/validate', authenticateToken, (req, res) => {
-  res.status(200).json({ message: 'Token is valid', user: req.user });
-});
-
-
+// Login route
 router.post('/login', (req, res) => {
   const { student_number, password } = req.body;
 
-  console.log('Received Student Number:', student_number); // Log received student number
-  console.log('Received Password:', password); // Log received password
-
   const query = `SELECT * FROM students WHERE student_number = ?`;
   connection.query(query, [student_number], (err, result) => {
-    if (err) {
-      console.log('Database Error:', err);
-      res.status(500).json({ message: 'An error occurred', error: err });
-    } else {
-      console.log('Query Result:', result); // Log the result of the query
+    if (err) return res.status(500).json({ message: 'An error occurred', error: err });
 
-      if (result.length > 0) {
-        const student = result[0];
-        console.log('Student Found:', student); // Log the student details
+    if (result.length > 0) {
+      const student = result[0];
+      if (compareSync(password, student.hashed_password)) {
+        const token = jwt.sign({ student_number: student.student_number }, JWT_SECRET, { expiresIn: '12h' });
 
-        const passwordMatch = compareSync(password, student.hashed_password);
-        console.log('Password Match:', passwordMatch); // Log whether passwords match
-
-        if (passwordMatch) {
-          const token = jwt.sign(
-            { student_number: student.student_number },
-            JWT_SECRET,
-            { expiresIn: '12h' }
-          );
-          res.status(200).json({ message: 'Login successful', token });
-        } else {
-          res.status(401).json({ message: 'Invalid credentials' });
-        }
+        // Store the token in the session
+        req.session.token = token;
+        req.session.student_number = student.student_number;
+        res.status(200).json({ message: 'Login successful' });
       } else {
-        res.status(404).json({ message: 'Student not found' });
+        res.status(401).json({ message: 'Invalid credentials' });
       }
+    } else {
+      res.status(404).json({ message: 'Student not found' });
     }
   });
 });
-// Middleware to authenticate requests
-// router to test the registration of a student
 
-router.get('/register', (req, res) => {
-  res.render('register.ejs');
+// Session authentication middleware
+function authenticateSession(req, res, next) {
+  if (!req.session.token) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+
+  jwt.verify(req.session.token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: 'Session expired or invalid' });
+    }
+    req.user = user;
+    next();
+  });
+}
+
+// Protected route using session-based authentication
+router.get('/authenticate', authenticateSession, (req, res) => {
+  res.status(200).json({ message: 'Token is valid', user: req.user });
 });
 
-
-
+// Logout route
+router.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).json({ message: 'An error occurred during logout' });
+    console.log('Session destroyed');
+    res.clearCookie('connect.sid'); // Clear session cookie
+    res.status(200).json({ message: 'Logout successful' });
+  });
+});
 
 export default router;
