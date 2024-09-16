@@ -6,7 +6,7 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: "http://localhost:5173", // Use the exact frontend URL
+  origin: true,
   credentials: true // Allow cookies and credentials
 }));
 
@@ -25,7 +25,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Serve static files (if needed)
-// app.use(express.static('public'));
+ app.use(express.static('public'));
 
 // Routes
 import auth from './routes/auth.js'; // Your auth routes

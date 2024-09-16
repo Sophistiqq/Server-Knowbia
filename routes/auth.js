@@ -29,10 +29,11 @@ router.post('/register', (req, res) => {
   const { student_number, firstname, lastname, middle_name, email, password, phone_number, year_level, sex, suffix, birthday } = req.body;
   const hashed_password = hashSync(password, 10);
   
-  const query = `INSERT INTO students (student_number, firstname, lastname, middle_name, email, hashed_password, phone_number, year_level, sex, suffix, birthday, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, false)`;
+  const query = `INSERT INTO users (student_number, firstname, lastname, middle_name, email, hashed_password, phone_number, year_level, sex, suffix, birthday, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, false)`;
 
   connection.query(query, [student_number, firstname, lastname, middle_name, email, hashed_password, phone_number, year_level, sex, suffix, birthday], (err, result) => {
     if (err) {
+      console.error(err);
       const errorMessage = err.code === 'ER_DUP_ENTRY' ? 'The student number or email already exists.' : 'An error occurred during registration.';
       res.status(500).json({ message: errorMessage });
     } else {
@@ -95,6 +96,10 @@ router.post('/logout', (req, res) => {
     res.clearCookie('connect.sid'); // Clear session cookie
     res.status(200).json({ message: 'Logout successful' });
   });
+});
+
+router.get('/register', (req, res) => {
+  res.render('register.ejs');
 });
 
 export default router;
