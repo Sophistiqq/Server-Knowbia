@@ -46,7 +46,7 @@ router.post('/register', (req, res) => {
 router.post('/login', (req, res) => {
   const { student_number, password } = req.body;
 
-  const query = `SELECT * FROM students WHERE student_number = ?`;
+  const query = `SELECT * FROM users WHERE student_number = ?`;
   connection.query(query, [student_number], (err, result) => {
     if (err) return res.status(500).json({ message: 'An error occurred', error: err });
 

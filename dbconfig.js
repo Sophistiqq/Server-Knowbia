@@ -7,7 +7,7 @@ const connection = mysql.createConnection({
   host: "localhost",
   user: "roi",
   port: 3306,
-  database: "admin",
+  database: "knowbia",
   password: "123",
   waitForConnections: true,
   connectionLimit: 10,
