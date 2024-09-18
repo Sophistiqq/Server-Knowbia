@@ -27,27 +27,45 @@ try {
   console.log('error connecting: ' + error.stack);
 }
 
-// Users table schema
-const createUsersTable = `CREATE TABLE IF NOT EXISTS users (
+// Users table schema (for students)
+const createStudentsTable = `CREATE TABLE IF NOT EXISTS students (
   id INT AUTO_INCREMENT PRIMARY KEY,
   student_number VARCHAR(255) NOT NULL UNIQUE,
   firstname VARCHAR(255) NOT NULL,
   lastname VARCHAR(255) NOT NULL,
-  middle_name VARCHAR(255),
+  middlename VARCHAR(255),
   email VARCHAR(255) NOT NULL UNIQUE,
   hashed_password VARCHAR(255) NOT NULL,
   phone_number VARCHAR(255),
   year_level VARCHAR(255),
   sex VARCHAR(255),
   suffix VARCHAR(255),
-  birthday DATE,
+  birthdate DATE,
   verified BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )`;
 
+// Teachers table schema
+const createTeachersTable = `CREATE TABLE IF NOT EXISTS teachers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  firstname VARCHAR(255) NOT NULL,
+  lastname VARCHAR(255) NOT NULL,
+  middlename VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  hashed_password VARCHAR(255) NOT NULL,
+  phone_number VARCHAR(255),
+  department VARCHAR(255),
+  sex VARCHAR(255),
+  suffix VARCHAR(255),
+  birthdate DATE,
+  verified BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+)`;
 
-connection.query(createUsersTable, (err, results, fields) => {
+// Create users table
+connection.query(createStudentsTable, (err, results, fields) => {
   if (err) {
     console.log(err.message);
   } else {
@@ -55,6 +73,13 @@ connection.query(createUsersTable, (err, results, fields) => {
   }
 });
 
+// Create teachers table
+connection.query(createTeachersTable, (err, results, fields) => {
+  if (err) {
+    console.log(err.message);
+  } else {
+    console.log('Teachers table created successfully');
+  }
+});
 
 export default connection;
-

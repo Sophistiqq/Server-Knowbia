@@ -24,46 +24,57 @@ router.use(session({
   }
 }));
 
-// Register route
+// Register route for teachers
 router.post('/register', (req, res) => {
-  const { student_number, firstname, lastname, middle_name, email, password, phone_number, year_level, sex, suffix, birthday } = req.body;
+  const { firstname, lastname, middlename, email, password, phone_number, department, birthdate } = req.body;
   const hashed_password = hashSync(password, 10);
-  
-  const query = `INSERT INTO students (student_number, firstname, lastname, middle_name, email, hashed_password, phone_number, year_level, sex, suffix, birthday, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, false)`;
 
-  connection.query(query, [student_number, firstname, lastname, middle_name, email, hashed_password, phone_number, year_level, sex, suffix, birthday], (err, result) => {
+  const query = `INSERT INTO teachers (firstname, lastname, middlename, email, hashed_password, phone_number, department, birthdate, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, false)`;
+
+  connection.query(query, [firstname, lastname, middlename, email, hashed_password, phone_number, department, birthdate], (err, result) => {
     if (err) {
       console.error(err);
-      const errorMessage = err.code === 'ER_DUP_ENTRY' ? 'The student number or email already exists.' : 'An error occurred during registration.';
+      const errorMessage = err.code === 'ER_DUP_ENTRY' ? 'The teacher ID or email already exists.' : 'An error occurred during registration.';
       res.status(500).json({ message: errorMessage });
     } else {
-      res.status(201).json({ message: 'Student registered successfully' });
+      res.status(201).json({ message: 'Teacher registered successfully' });
     }
   });
 });
 
-// Login route
+// Login route for teachers
 router.post('/login', (req, res) => {
-  const { student_number, password } = req.body;
+  const { email, password } = req.body;
 
-  const query = `SELECT * FROM students WHERE student_number = ?`;
-  connection.query(query, [student_number], (err, result) => {
+  const query = `SELECT * FROM teachers WHERE email = ?`;
+  connection.query(query, [email], (err, result) => {
     if (err) return res.status(500).json({ message: 'An error occurred', error: err });
 
     if (result.length > 0) {
-      const student = result[0];
-      if (compareSync(password, student.hashed_password)) {
-        const token = jwt.sign({ student_number: student.student_number }, JWT_SECRET, { expiresIn: '12h' });
+      const teacher = result[0];
+      console.log(teacher);
+      if (compareSync(password, teacher.hashed_password)) {
+        const token = jwt.sign({ email: teacher.email }, JWT_SECRET, { expiresIn: '12h' });
 
         // Store the token in the session
         req.session.token = token;
-        req.session.student_number = student.student_number;
-        res.status(200).json({ message: 'Login successful' });
+        req.session.email = teacher.email;
+        res.json({
+          success: true,
+          user: {
+            firstname: teacher.firstname,
+            lastname: teacher.lastname,
+            middlename: teacher.middlename,
+            email: teacher.email,
+            department: teacher.department,
+            phone_number: teacher.phone_number,
+          }
+        });
       } else {
         res.status(401).json({ message: 'Invalid credentials' });
       }
     } else {
-      res.status(404).json({ message: 'Student not found' });
+      res.status(404).json({ message: 'Teacher not found' });
     }
   });
 });

@@ -30,6 +30,9 @@ app.set('views', path.join(__dirname, 'views'));
 // Routes
 import auth from './routes/auth.js'; // Your auth routes
 app.use('/auth', auth);
+import teacher from './routes/teacherAuth.js'; // Your admin routes
+app.use('/teacher', teacher);
+
 
 app.get('/', (req, res) => {
   res.render('index.ejs');
