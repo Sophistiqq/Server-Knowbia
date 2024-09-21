@@ -10,7 +10,7 @@ app.use(cors({
   credentials: true // Allow cookies and credentials
 }));
 
-// Set security headers (optional, for Content Security Policy)
+// allow external access to the server
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
@@ -25,11 +25,11 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Serve static files (if needed)
- app.use(express.static('public'));
+app.use(express.static('public'));
 
 // Routes
-import auth from './routes/auth.js'; // Your auth routes
-app.use('/auth', auth);
+import student from './routes/studentAuth.js'; // Your auth routes
+app.use('/student', student);
 import teacher from './routes/teacherAuth.js'; // Your admin routes
 app.use('/teacher', teacher);
 

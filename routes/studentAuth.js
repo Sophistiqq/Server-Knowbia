@@ -28,7 +28,7 @@ router.use(session({
 router.post('/register', (req, res) => {
   const { student_number, firstname, lastname, middle_name, email, password, phone_number, year_level, sex, suffix, birthday } = req.body;
   const hashed_password = hashSync(password, 10);
-  
+
   const query = `INSERT INTO students (student_number, firstname, lastname, middle_name, email, hashed_password, phone_number, year_level, sex, suffix, birthday, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, false)`;
 
   connection.query(query, [student_number, firstname, lastname, middle_name, email, hashed_password, phone_number, year_level, sex, suffix, birthday], (err, result) => {
@@ -53,12 +53,23 @@ router.post('/login', (req, res) => {
     if (result.length > 0) {
       const student = result[0];
       if (compareSync(password, student.hashed_password)) {
-        const token = jwt.sign({ student_number: student.student_number }, JWT_SECRET, { expiresIn: '12h' });
+        const token = jwt.sign({ email: student.email }, JWT_SECRET, { expiresIn: '12h' });
 
         // Store the token in the session
         req.session.token = token;
-        req.session.student_number = student.student_number;
-        res.status(200).json({ message: 'Login successful' });
+        req.session.email = student.email;
+
+        res.json({
+          success: true,
+          token, // Send the token back to the client
+          user: {
+            firstname: student.firstname,
+            lastname: student.lastname,
+            email: student.email,
+            department: student.department,
+            phone_number: student.phone_number
+          }
+        });
       } else {
         res.status(401).json({ message: 'Invalid credentials' });
       }

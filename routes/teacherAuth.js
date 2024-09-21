@@ -20,7 +20,8 @@ router.use(session({
   cookie: {
     secure: false, // Set to true in production with HTTPS
     httpOnly: true, // Prevent client-side access to the cookie
-    maxAge: 12 * 60 * 60 * 1000 // Session duration: 12 hours
+    maxAge: 12 * 60 * 60 * 1000, // Session duration: 12 hours
+    sameSite: 'None'
   }
 }));
 
