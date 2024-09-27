@@ -53,9 +53,10 @@ router.post('/login', (req, res) => {
 
     if (result.length > 0) {
       const teacher = result[0];
-      console.log(teacher);
       if (compareSync(password, teacher.hashed_password)) {
         const token = jwt.sign({ email: teacher.email }, JWT_SECRET, { expiresIn: '12h' });
+
+        const expiresIn = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
         // Store the token in the session
         req.session.token = token;
@@ -69,7 +70,9 @@ router.post('/login', (req, res) => {
             email: teacher.email,
             department: teacher.department,
             phone_number: teacher.phone_number,
-          }
+          },
+          token,
+          expiresIn // Add this to send to the client
         });
       } else {
         res.status(401).json({ message: 'Invalid credentials' });
@@ -79,7 +82,6 @@ router.post('/login', (req, res) => {
     }
   });
 });
-
 // Session authentication middleware
 function authenticateSession(req, res, next) {
   if (!req.session.token) {
