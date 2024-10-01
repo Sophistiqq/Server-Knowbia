@@ -53,16 +53,18 @@ const createClassesTable = `CREATE TABLE IF NOT EXISTS classes (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )`;
 
-// Students table schema
-const createStudentsTable = `CREATE TABLE IF NOT EXISTS students (
+
+const createStudentsTable = `
+CREATE TABLE IF NOT EXISTS students (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  studentName VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  class_id INT,
-  FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)`;
+  studentNumber VARCHAR(50) NOT NULL,
+  email VARCHAR(100),
+  password VARCHAR(100) NOT NULL,
+  firstName VARCHAR(50),
+  lastName VARCHAR(50),
+  section VARCHAR(50)
+);
+`
 
 // Create tables
 const createTables = () => {

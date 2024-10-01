@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
-
+import http from 'http';
+import setupWebSocket from './routes/websocket.js';
 const app = express();
 
 // CORS configuration
@@ -28,8 +29,8 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static('public'));
 
 // Routes
-import student from './routes/studentAuth.js'; // Your auth routes
-app.use('/student', student);
+//import student from './routes/studentAuth.js'; // Unused now
+//app.use('/student', student);
 import teacher from './routes/teacherAuth.js'; // Your admin routes
 app.use('/teacher', teacher);
 
@@ -41,5 +42,19 @@ app.get('/', (req, res) => {
 app.get('/page', (req, res) => {
   res.render('page.ejs');
 });
+
+// Here we can setup the websocket
+// Create the HTTP server and pass it to WebSocket setup
+const server = http.createServer(app);
+const wsPort = 8080; // You can still keep this variable
+// Listen on the same server instance without needing to call listen again
+server.listen(wsPort, () => {
+  console.log(`HTTP server is running on port ${wsPort}`);
+});
+
+// Call WebSocket setup with the HTTP server
+setupWebSocket(server)
+
+
 
 export default app;
