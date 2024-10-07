@@ -22,8 +22,6 @@ const setupWebSocket = (server) => {
   const wss = new WebSocket.Server({ server, path: '/ws' });
 
   wss.on('connection', (ws) => {
-    console.log('Client connected');
-
     // Send active assessments to newly connected client
     if (activeAssessments.length > 0) {
       ws.send(JSON.stringify({ type: 'activeAssessments', assessments: activeAssessments }));
@@ -31,7 +29,10 @@ const setupWebSocket = (server) => {
 
     ws.on('message', async (message) => {
       const data = JSON.parse(message);
-      console.log('Received:', data);
+      // handle ping from heartbeat
+      if (data.type === 'ping') {
+        ws.send(JSON.stringify({ type: 'pong' }));
+      }
 
       // Handle incoming messages
       if (data.type === 'register') {
@@ -42,10 +43,6 @@ const setupWebSocket = (server) => {
         activeAssessments.push(data.assessment); // Store the new assessment
         broadcastAssessment(wss, data.assessment);
       }
-    });
-
-    ws.on('close', () => {
-      console.log('Client disconnected');
     });
   });
 

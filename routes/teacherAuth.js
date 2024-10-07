@@ -116,4 +116,15 @@ router.get('/register', (req, res) => {
   res.render('register.ejs');
 });
 
+// route for fetching all students data from the database
+router.get('/studentsInfo', (req, res) => {
+  const query = `SELECT * FROM students`;
+
+  connection.query(query, (err, result) => {
+    if (err) return res.status(500).json({ message: 'An error occurred', error: err });
+
+    res.json(result);
+  });
+});
+
 export default router;
