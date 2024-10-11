@@ -66,6 +66,19 @@ CREATE TABLE IF NOT EXISTS students (
 );
 `
 
+
+const createAssessment_results = `
+CREATE TABLE IF NOT EXISTS assessment_results (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_number VARCHAR(255),
+  assessment_id INT,
+  score INT,
+  answers TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+`
+
+
 // Create tables
 const createTables = () => {
   connection.query(createTeachersTable, (err, results) => {
@@ -91,6 +104,15 @@ const createTables = () => {
       console.log('Students table created successfully');
     }
   });
+
+  connection.query(createAssessment_results, (err, results) => {
+    if (err) {
+      console.log(err.message);
+    } else {
+      console.log('Assessment results table created successfully');
+    }
+  });
+
 };
 
 // Call the function to create the tables

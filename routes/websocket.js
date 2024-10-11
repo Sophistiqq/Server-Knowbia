@@ -42,6 +42,8 @@ const setupWebSocket = (server) => {
       } else if (data.type === 'newAssessment') {
         activeAssessments.push(data.assessment); // Store the new assessment
         broadcastAssessment(wss, data.assessment);
+      } else if (data.type === 'studentResult') {
+        handleStudentResult(ws, data.result);
       }
     });
   });
@@ -98,7 +100,14 @@ const handleLogin = async (ws, loginData) => {
         ws.send(JSON.stringify({
           type: 'loginResponse',
           success: true,
-          message: 'Login successful'
+          message: 'Login successful',
+          data: {
+            studentNumber: rows[0].studentNumber,
+            email: rows[0].email,
+            firstName: rows[0].firstName,
+            lastName: rows[0].lastName,
+            section: rows[0].section
+          }
         }));
       } else {
         ws.send(JSON.stringify({
@@ -126,12 +135,56 @@ const handleLogin = async (ws, loginData) => {
 
 // Broadcast assessment to all clients except the sender
 const broadcastAssessment = (wss, assessment) => {
-  const assessmentData = JSON.stringify({ type: 'newAssessment', assessment });
+  const assessmentData = JSON.stringify({
+    type: 'newAssessment',
+    assessment: {
+      id: assessment.id,
+      title: assessment.title,
+      description: assessment.description,
+      questions: assessment.questions,
+      timeLimit: assessment.timeLimit
+    }
+  });
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(assessmentData);
     }
   });
+};
+
+
+
+const handleStudentResult = async (ws, resultData) => {
+  try {
+    const { studentNumber, assessmentId, score, answers } = resultData;
+
+    console.log('Received student result:', {
+      studentNumber,
+      assessmentId: typeof assessmentId === 'number' ? assessmentId : 'Not a number',
+      score,
+      answers: typeof answers
+    });
+
+    // Store the result in the database
+    const insertQuery = `
+      INSERT INTO assessment_results (student_number, assessment_id, score, answers)
+      VALUES (?, ?, ?, ?)
+    `;
+    await pool.execute(insertQuery, [studentNumber, assessmentId, score, JSON.stringify(answers)]);
+
+    ws.send(JSON.stringify({
+      type: 'resultConfirmation',
+      success: true,
+      message: 'Result stored successfully'
+    }));
+  } catch (error) {
+    console.error('Database error:', error);
+    ws.send(JSON.stringify({
+      type: 'resultConfirmation',
+      success: false,
+      message: 'Failed to store result'
+    }));
+  }
 };
 
 export default setupWebSocket;
