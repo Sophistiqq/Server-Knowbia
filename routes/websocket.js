@@ -97,18 +97,32 @@ const handleLogin = async (ws, loginData) => {
     if (rows.length > 0) {
       const match = await bcrypt.compare(loginData.password, rows[0].password);
       if (match) {
-        ws.send(JSON.stringify({
-          type: 'loginResponse',
-          success: true,
-          message: 'Login successful',
-          data: {
-            studentNumber: rows[0].studentNumber,
-            email: rows[0].email,
-            firstName: rows[0].firstName,
-            lastName: rows[0].lastName,
-            section: rows[0].section
-          }
-        }));
+        // Check if the student has already taken the assessment
+        const [assessmentResults] = await pool.query(
+          'SELECT * FROM assessment_results WHERE student_number = ? AND assessment_id = ?',
+          [loginData.studentNumber, loginData.assessmentId]
+        );
+
+        if (assessmentResults.length > 0) {
+          ws.send(JSON.stringify({
+            type: 'loginResponse',
+            success: false,
+            message: 'You have already taken this assessment.'
+          }));
+        } else {
+          ws.send(JSON.stringify({
+            type: 'loginResponse',
+            success: true,
+            message: 'Login successful',
+            data: {
+              studentNumber: rows[0].studentNumber,
+              email: rows[0].email,
+              firstName: rows[0].firstName,
+              lastName: rows[0].lastName,
+              section: rows[0].section
+            }
+          }));
+        }
       } else {
         ws.send(JSON.stringify({
           type: 'loginResponse',
@@ -157,13 +171,6 @@ const broadcastAssessment = (wss, assessment) => {
 const handleStudentResult = async (ws, resultData) => {
   try {
     const { studentNumber, assessmentId, score, answers } = resultData;
-
-    console.log('Received student result:', {
-      studentNumber,
-      assessmentId: typeof assessmentId === 'number' ? assessmentId : 'Not a number',
-      score,
-      answers: typeof answers
-    });
 
     // Store the result in the database
     const insertQuery = `

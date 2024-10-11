@@ -84,25 +84,19 @@ const createTables = () => {
   connection.query(createTeachersTable, (err, results) => {
     if (err) {
       console.log(err.message);
-    } else {
-      console.log('Teachers table created successfully');
     }
   });
 
   connection.query(createClassesTable, (err, results) => {
     if (err) {
       console.log(err.message);
-    } else {
-      console.log('Classes table created successfully');
     }
   });
 
   connection.query(createStudentsTable, (err, results) => {
     if (err) {
       console.log(err.message);
-    } else {
-      console.log('Students table created successfully');
-    }
+    } 
   });
 
   connection.query(createAssessment_results, (err, results) => {
