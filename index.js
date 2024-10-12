@@ -2,9 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import http from 'http';
-import setupWebSocket from './routes/websocket.js';
 const app = express();
 
+import setupWebSocket from './routes/websocket.js';
 // CORS configuration
 app.use(cors({
   origin: true,
@@ -33,6 +33,8 @@ app.use(express.static('public'));
 //app.use('/student', student);
 import teacher from './routes/teacherAuth.js'; // Your admin routes
 app.use('/teacher', teacher);
+import assessments from './routes/assessments.js';
+app.use('/assessments', assessments);
 
 
 app.get('/', (req, res) => {
@@ -51,6 +53,9 @@ const wsPort = 8080; // You can still keep this variable
 server.listen(wsPort, () => {
   console.log(`HTTP server is running on port ${wsPort}`);
 });
+
+
+
 
 // Call WebSocket setup with the HTTP server
 setupWebSocket(server)

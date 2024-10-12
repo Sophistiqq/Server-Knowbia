@@ -2,6 +2,16 @@ import mysql from 'mysql2';
 import dotenv from 'dotenv';
 dotenv.config();
 
+const pool = mysql.createPool({
+  host: "localhost",
+  user: "roi",
+  port: 3306,
+  database: "knowbia",
+  password: "123",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 const connection = mysql.createConnection({
   host: "localhost",
   user: "roi",
@@ -12,7 +22,6 @@ const connection = mysql.createConnection({
   connectionLimit: 10,
   queueLimit: 0
 });
-
 try {
   connection.connect((err) => {
     if (err) {
@@ -66,6 +75,17 @@ CREATE TABLE IF NOT EXISTS students (
 );
 `
 
+// Assessment results table schema
+const createAssessments = `
+CREATE TABLE IF NOT EXISTS assessments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255),
+  description TEXT,
+  questions TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+`
+
 
 const createAssessment_results = `
 CREATE TABLE IF NOT EXISTS assessment_results (
@@ -81,25 +101,25 @@ CREATE TABLE IF NOT EXISTS assessment_results (
 
 // Create tables
 const createTables = () => {
-  connection.query(createTeachersTable, (err, results) => {
+  pool.query(createTeachersTable, (err, results) => {
     if (err) {
       console.log(err.message);
     }
   });
 
-  connection.query(createClassesTable, (err, results) => {
+  pool.query(createClassesTable, (err, results) => {
     if (err) {
       console.log(err.message);
     }
   });
 
-  connection.query(createStudentsTable, (err, results) => {
+  pool.query(createStudentsTable, (err, results) => {
     if (err) {
       console.log(err.message);
-    } 
+    }
   });
 
-  connection.query(createAssessment_results, (err, results) => {
+  pool.query(createAssessment_results, (err, results) => {
     if (err) {
       console.log(err.message);
     } else {
@@ -107,9 +127,16 @@ const createTables = () => {
     }
   });
 
+  pool.query(createAssessments, (err, results) => {
+    if (err) {
+      console.log(err.message);
+    } else {
+      console.log('Assessments table created successfully');
+    }
+  });
 };
 
 // Call the function to create the tables
 createTables();
 
-export default connection;
+export default pool;
