@@ -82,6 +82,30 @@ router.delete('/assessments/:id', async (req, res) => {
   }
 });
 
-// TODO: ADD A ROUTE FOR GETTING ALL THE STUDENTS THAT TOOK THE ASSESSMENTS
+
+// endpoint for getting assessment results based on assessment id
+router.get('/assessments/:id/results', async (req, res) => {
+  try {
+    const [rows] = await pool.query('select * from assessment_results where assessment_id = ?)', [req.params.id]);
+    res.json(rows);
+    console.log(rows);
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// endpoint for getting all finished assessments, and get the title from assessments table
+
+router.get('/finished', async (req, res) => {
+  try {
+    const [rows] = await pool.query('select assessments.title, assessment_results.* from assessments inner join assessment_results on assessments.id = assessment_results.assessment_id');
+    res.json(rows);
+    console.log(rows);
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 export default router;
