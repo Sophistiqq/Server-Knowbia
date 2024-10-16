@@ -86,7 +86,9 @@ router.delete('/assessments/:id', async (req, res) => {
 // endpoint for getting assessment results based on assessment id
 router.get('/assessments/:id/results', async (req, res) => {
   try {
-    const [rows] = await pool.query('select * from assessment_results where assessment_id = ?)', [req.params.id]);
+    //const [rows] = await pool.query('select * from assessment_results where assessment_id = ?', [req.params.id]);
+    // select all from assessment_results and the student_number in there should be used to get the lastname of the student from the students table
+    const [rows] = await pool.query('select assessment_results.*, students.lastName from assessment_results inner join students on assessment_results.student_number = students.studentNumber where assessment_id = ?', [req.params.id]);
     res.json(rows);
     console.log(rows);
   } catch (error) {

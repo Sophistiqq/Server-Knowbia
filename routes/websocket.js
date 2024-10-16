@@ -171,6 +171,7 @@ const broadcastAssessment = (wss, assessment) => {
 const handleStudentResult = async (ws, resultData) => {
   try {
     const { studentNumber, assessmentId, score, answers } = resultData;
+    console.log(resultData);
 
     // Store the result in the database
     const insertQuery = `
