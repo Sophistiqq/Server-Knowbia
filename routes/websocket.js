@@ -40,8 +40,7 @@ const setupWebSocket = (server) => {
       } else if (data.type === 'login') {
         handleLogin(ws, data.data);
       } else if (data.type === 'newAssessment') {
-        activeAssessments.push(data.assessment); // Store the new assessment
-        broadcastAssessment(wss, data.assessment);
+        handleNewAssessment(wss, ws, data.assessment);
       } else if (data.type === 'studentResult') {
         handleStudentResult(ws, data.result);
       }
@@ -147,7 +146,50 @@ const handleLogin = async (ws, loginData) => {
   }
 };
 
-// Broadcast assessment to all clients except the sender
+// New function to handle assessment creation and validation
+const handleNewAssessment = async (wss, ws, assessment) => {
+  try {
+    // Check if assessment with same ID already exists
+    const existingAssessment = activeAssessments.find(a => a.id === assessment.id);
+    
+    if (existingAssessment) {
+      ws.send(JSON.stringify({
+        type: 'assessmentError',
+        message: 'An assessment with this ID is already active'
+      }));
+      return;
+    }
+
+    // Check if assessment exists in the database
+    const [rows] = await pool.query('SELECT * FROM assessment_results WHERE assessment_id = ?', [assessment.id]);
+    
+    if (rows.length > 0) {
+      ws.send(JSON.stringify({
+        type: 'assessmentError',
+        message: 'This assessment has already been completed by some students'
+      }));
+      return;
+    }
+
+    // If all checks pass, add to active assessments and broadcast
+    activeAssessments.push(assessment);
+    broadcastAssessment(wss, assessment);
+    
+    ws.send(JSON.stringify({
+      type: 'assessmentConfirmation',
+      success: true,
+      message: 'Assessment successfully distributed'
+    }));
+  } catch (error) {
+    console.error('Error handling new assessment:', error);
+    ws.send(JSON.stringify({
+      type: 'assessmentError',
+      message: 'Failed to process assessment'
+    }));
+  }
+};
+
+// Updated broadcastAssessment function
 const broadcastAssessment = (wss, assessment) => {
   const assessmentData = JSON.stringify({
     type: 'newAssessment',
@@ -159,13 +201,13 @@ const broadcastAssessment = (wss, assessment) => {
       timeLimit: assessment.timeLimit
     }
   });
+  
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(assessmentData);
     }
   });
 };
-
 
 
 const handleStudentResult = async (ws, resultData) => {

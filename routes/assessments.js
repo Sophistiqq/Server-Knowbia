@@ -31,7 +31,8 @@ router.post('/assessments', async (req, res) => {
 //  endpoint to get all assessments
 router.get('/assessments', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT id, title, description FROM assessments');
+    const [rows] = await pool.query('SELECT * FROM assessments');
+    console.log(rows);
     res.json(rows);
   } catch (error) {
     console.error('Database error:', error);
