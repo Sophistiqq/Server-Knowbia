@@ -103,38 +103,21 @@ const handleLogin = async (ws, loginData) => {
         );
 
         if (assessmentResults.length > 0) {
-          ws.send(JSON.stringify({
-            type: 'loginResponse',
-            success: false,
-            message: 'You have already taken this assessment.'
-          }));
+          sendLoginResponse(ws, false, 'You have already taken this assessment.');
         } else {
-          ws.send(JSON.stringify({
-            type: 'loginResponse',
-            success: true,
-            message: 'Login successful',
-            data: {
-              studentNumber: rows[0].studentNumber,
-              email: rows[0].email,
-              firstName: rows[0].firstName,
-              lastName: rows[0].lastName,
-              section: rows[0].section
-            }
-          }));
+          sendLoginResponse(ws, true, 'Login successful', {
+            studentNumber: rows[0].studentNumber,
+            email: rows[0].email,
+            firstName: rows[0].firstName,
+            lastName: rows[0].lastName,
+            section: rows[0].section
+          });
         }
       } else {
-        ws.send(JSON.stringify({
-          type: 'loginResponse',
-          success: false,
-          message: 'Invalid student number or password'
-        }));
+        sendLoginResponse(ws, false, 'Invalid student number or password');
       }
     } else {
-      ws.send(JSON.stringify({
-        type: 'loginResponse',
-        success: false,
-        message: 'Invalid student number or password'
-      }));
+      sendLoginResponse(ws, false, 'Invalid student number or password');
     }
   } catch (error) {
     console.error('Database error:', error);
@@ -145,13 +128,23 @@ const handleLogin = async (ws, loginData) => {
     }));
   }
 };
+const sendLoginResponse = (ws, success, message, data = null) => {
+  ws.send(JSON.stringify({
+    type: 'loginResponse',
+    success,
+    message,
+    data
+  }));
+};
+
+
 
 // New function to handle assessment creation and validation
 const handleNewAssessment = async (wss, ws, assessment) => {
   try {
     // Check if assessment with same ID already exists
     const existingAssessment = activeAssessments.find(a => a.id === assessment.id);
-    
+
     if (existingAssessment) {
       ws.send(JSON.stringify({
         type: 'assessmentError',
@@ -162,7 +155,7 @@ const handleNewAssessment = async (wss, ws, assessment) => {
 
     // Check if assessment exists in the database
     const [rows] = await pool.query('SELECT * FROM assessment_results WHERE assessment_id = ?', [assessment.id]);
-    
+
     if (rows.length > 0) {
       ws.send(JSON.stringify({
         type: 'assessmentError',
@@ -174,7 +167,7 @@ const handleNewAssessment = async (wss, ws, assessment) => {
     // If all checks pass, add to active assessments and broadcast
     activeAssessments.push(assessment);
     broadcastAssessment(wss, assessment);
-    
+
     ws.send(JSON.stringify({
       type: 'assessmentConfirmation',
       success: true,
@@ -201,7 +194,7 @@ const broadcastAssessment = (wss, assessment) => {
       timeLimit: assessment.timeLimit
     }
   });
-  
+
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(assessmentData);
@@ -213,7 +206,6 @@ const broadcastAssessment = (wss, assessment) => {
 const handleStudentResult = async (ws, resultData) => {
   try {
     const { studentNumber, assessmentId, score, answers } = resultData;
-    console.log(resultData);
 
     // Store the result in the database
     const insertQuery = `

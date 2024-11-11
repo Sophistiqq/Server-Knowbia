@@ -32,7 +32,6 @@ router.post('/assessments', async (req, res) => {
 router.get('/assessments', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM assessments');
-    console.log(rows);
     res.json(rows);
   } catch (error) {
     console.error('Database error:', error);
@@ -91,7 +90,6 @@ router.get('/assessments/:id/results', async (req, res) => {
     // select all from assessment_results and the student_number in there should be used to get the lastname of the student from the students table
     const [rows] = await pool.query('select assessment_results.*, students.lastName from assessment_results inner join students on assessment_results.student_number = students.studentNumber where assessment_id = ?', [req.params.id]);
     res.json(rows);
-    console.log(rows);
   } catch (error) {
     console.error('Database error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -104,7 +102,6 @@ router.get('/finished', async (req, res) => {
   try {
     const [rows] = await pool.query('select assessments.title, assessment_results.* from assessments inner join assessment_results on assessments.id = assessment_results.assessment_id');
     res.json(rows);
-    console.log(rows);
   } catch (error) {
     console.error('Database error:', error);
     res.status(500).json({ error: 'Internal server error' });
