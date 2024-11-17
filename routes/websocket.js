@@ -91,6 +91,23 @@ const handleRegistration = async (ws, userData) => {
 // Handle login
 const handleLogin = async (ws, loginData) => {
   try {
+    // Check if the student is restricted from taking assessments using an endpoint detection/detected using fetch
+    const restrictedUsers = await fetch('http://localhost:3000/detection/restrictedUsers');
+    const restrictedUsersData = await restrictedUsers.json();
+    console.log('Restricted users:', restrictedUsersData);
+    const isRestricted = restrictedUsersData.some(u => u.studentNumber === loginData.studentNumber);
+    if (isRestricted) {
+      console.log('Restricted user detected');
+      sendLoginResponse(ws, false, 'You are restricted from taking assessments');
+      return;
+    }
+  } catch (error) {
+    console.error('Error checking restricted users:', error);
+    sendLoginResponse(ws, false, 'Failed to check restricted users');
+  }
+
+  try {
+
     const [rows] = await pool.query('SELECT * FROM students WHERE studentNumber = ?', [loginData.studentNumber]);
 
     if (rows.length > 0) {

@@ -36,9 +36,9 @@ router.post('/register', (req, res) => {
     if (err) {
       console.error(err);
       const errorMessage = err.code === 'ER_DUP_ENTRY' ? 'The teacher ID or email already exists.' : 'An error occurred during registration.';
-      res.status(500).json({ message: errorMessage });
+      res.status(500).json({ message: errorMessage, success: false });
     } else {
-      res.status(201).json({ message: 'Teacher registered successfully' });
+      res.status(201).json({ message: 'Teacher registered successfully', success: true });
     }
   });
 });
