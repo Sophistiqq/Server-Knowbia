@@ -48,4 +48,10 @@ router.get('/restrictedUsers', (req, res) => {
   res.json(restrictedUsers);
 });
 
+// Endpoint to reset the restricted users
+router.post('/resetRestrictedUsers', (req, res) => {
+  restrictedUsers = [];
+  res.json({ message: 'Restricted users reset' });
+});
+
 export default router;
