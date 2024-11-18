@@ -115,5 +115,28 @@ router.get('/finished', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+// Endpoint to get data to give to the dashboard
+router.get('/dashboard', async (req, res) => {
+  try {
+    const [assessments] = await pool.query('SELECT * FROM assessments');
+    const [results] = await pool.query('SELECT * FROM assessment_results');
+    const [students] = await pool.query('SELECT * FROM students');
+    res.json({ assessments, results, students });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Endpoint to get the Highest ranking of the students
+router.get('/rankings', async (req, res) => {
+  try {
+    const [rows] = await pool.query('select students.studentNumber, students.firstName, students.lastName, max(assessment_results.score) as highest_score from assessment_results inner join students on assessment_results.student_number = students.studentNumber group by students.studentNumber');
+    res.json(rows);
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 export default router;
