@@ -29,7 +29,7 @@ router.post('/assessments', async (req, res) => {
 });
 
 //  endpoint to get all assessments
-router.get('/assessments', async (req, res) => {
+router.get('/assessments', async (_req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM assessments');
     res.json(rows);
@@ -98,7 +98,7 @@ router.get('/assessments/:id/results', async (req, res) => {
 
 // endpoint for getting all finished assessments, and get the title from assessments table
 
-router.get('/finished', async (req, res) => {
+router.get('/finished', async (_req, res) => {
   try {
     const [rows] = await pool.query('select assessments.title, assessment_results.*, students.firstName, students.lastName from assessments inner join assessment_results on assessments.id = assessment_results.assessment_id inner join students on assessment_results.student_number = students.studentNumber');
     const combinedResults = rows.reduce((acc, row) => {
@@ -116,7 +116,7 @@ router.get('/finished', async (req, res) => {
   }
 });
 // Endpoint to get data to give to the dashboard
-router.get('/dashboard', async (req, res) => {
+router.get('/dashboard', async (_req, res) => {
   try {
     const [assessments] = await pool.query('SELECT * FROM assessments');
     const [results] = await pool.query('SELECT * FROM assessment_results');
@@ -129,14 +129,25 @@ router.get('/dashboard', async (req, res) => {
 });
 
 // Endpoint to get the Highest ranking of the students
-router.get('/rankings', async (req, res) => {
+router.get('/rankings', async (_req, res) => {
   try {
-    const [rows] = await pool.query('select students.studentNumber, students.firstName, students.lastName, max(assessment_results.score) as highest_score from assessment_results inner join students on assessment_results.student_number = students.studentNumber group by students.studentNumber');
+    const [rows] = await pool.query('select students.studentNumber, students.firstName, students.lastName, max(assessment_results.score) as highest_score from assessment_results inner join students on assessment_results.student_number = students.studentNumber group by students.studentNumber order by highest_score desc limit 10');
     res.json(rows);
   } catch (error) {
     console.error('Database error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+// Endpoint to get all the records in the assessment_results table
+router.get('/assessment_results', async (_req, res) => {
+  try {
+    const [rows] = await pool.query('select * from assessment_results');
+    res.json(rows);
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 export default router;

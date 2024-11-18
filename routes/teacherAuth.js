@@ -127,4 +127,123 @@ router.get('/studentsInfo', (req, res) => {
   });
 });
 
+// Update student information
+router.put('/students/:studentNumber', (req, res) => {
+  const { studentNumber } = req.params;
+  const { firstName, lastName, email, section } = req.body;
+
+  // Validate required fields
+  if (!firstName || !lastName || !email || !section) {
+    return res.status(400).json({ 
+      message: 'Missing required fields', 
+      success: false 
+    });
+  }
+
+  const query = `
+    UPDATE students 
+    SET firstName = ?, 
+        lastName = ?, 
+        email = ?, 
+        section = ?
+    WHERE studentNumber = ?
+  `;
+
+  connection.query(
+    query,
+    [firstName, lastName, email, section, studentNumber],
+    (err, result) => {
+      if (err) {
+        console.error('Error updating student:', err);
+        return res.status(500).json({ 
+          message: 'An error occurred while updating the student', 
+          error: err.message,
+          success: false 
+        });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ 
+          message: 'Student not found', 
+          success: false 
+        });
+      }
+
+      res.json({ 
+        message: 'Student updated successfully', 
+        success: true 
+      });
+    }
+  );
+});
+
+// Delete student
+router.delete('/students/:studentNumber', (req, res) => {
+  const { studentNumber } = req.params;
+
+  // First check if the student exists
+  const checkQuery = `SELECT * FROM students WHERE studentNumber = ?`;
+  
+  connection.query(checkQuery, [studentNumber], (checkErr, checkResult) => {
+    if (checkErr) {
+      console.error('Error checking student:', checkErr);
+      return res.status(500).json({ 
+        message: 'An error occurred while checking student existence', 
+        error: checkErr.message,
+        success: false 
+      });
+    }
+
+    if (checkResult.length === 0) {
+      return res.status(404).json({ 
+        message: 'Student not found', 
+        success: false 
+      });
+    }
+
+    // If student exists, proceed with deletion
+    const deleteQuery = `DELETE FROM students WHERE studentNumber = ?`;
+
+    connection.query(deleteQuery, [studentNumber], (deleteErr, deleteResult) => {
+      if (deleteErr) {
+        console.error('Error deleting student:', deleteErr);
+        return res.status(500).json({ 
+          message: 'An error occurred while deleting the student', 
+          error: deleteErr.message,
+          success: false 
+        });
+      }
+
+      res.json({ 
+        message: 'Student deleted successfully', 
+        success: true 
+      });
+    });
+  });
+});
+
+// Get single student details
+router.get('/students/:studentNumber', (req, res) => {
+  const { studentNumber } = req.params;
+
+  const query = `SELECT * FROM students WHERE studentNumber = ?`;
+
+  connection.query(query, [studentNumber], (err, result) => {
+    if (err) {
+      console.error('Error fetching student:', err);
+      return res.status(500).json({ 
+        message: 'An error occurred while fetching student details', 
+        error: err.message 
+      });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ 
+        message: 'Student not found' 
+      });
+    }
+
+    res.json(result[0]);
+  });
+});
 export default router;
