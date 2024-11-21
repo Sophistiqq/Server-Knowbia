@@ -39,13 +39,5 @@ app.use('/detection', detection);
 import distribution from './routes/distribution.js';
 app.use('/distribution', distribution);
 
-app.get('/', (req, res) => {
-  res.render('index.ejs');
-});
-
-app.get('/page', (req, res) => {
-  res.render('page.ejs');
-});
-
 
 export default app;
