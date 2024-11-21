@@ -65,7 +65,7 @@ router.post('/login', async (req, res) => {
 
   try {
     // Check if user is restricted
-    const restrictedResponse = await fetch('http://localhost:3000/detection/restrictedUsers');
+    const restrictedResponse = await fetch('http://localhost:3000/assessments/restrictedUsers');
     const restrictedUsers = await restrictedResponse.json();
     const isRestricted = restrictedUsers.some(u => u.studentNumber === loginData.studentNumber);
     
@@ -197,6 +197,18 @@ router.post('/results', async (req, res) => {
   }
 });
 
+// Cancel an active assessment
+router.post('/cancel', (req, res) => {
+  const { assessmentId } = req.body;
+  
+  // Remove from active assessments in the main router
+  activeAssessments = activeAssessments.filter(a => a.id !== assessmentId);
+  
+  res.json({
+    success: true,
+    message: 'Assessment cancelled successfully'
+  });
+});
 // Optional: Clear assessment (for cleanup)
 router.delete('/assessments/:id', (req, res) => {
   const assessmentId = req.body.id;

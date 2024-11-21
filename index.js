@@ -34,8 +34,6 @@ import teacher from './routes/teacherAuth.js'; // Your admin routes
 app.use('/teacher', teacher);
 import assessments from './routes/assessments.js';
 app.use('/assessments', assessments);
-import detection from './routes/detection.js';
-app.use('/detection', detection);
 import distribution from './routes/distribution.js';
 app.use('/distribution', distribution);
 

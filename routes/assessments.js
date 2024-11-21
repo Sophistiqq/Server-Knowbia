@@ -13,6 +13,8 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+
+
 //  endpoint to create a new assessment
 router.post('/assessments', async (req, res) => {
   try {
@@ -149,5 +151,109 @@ router.get('/assessment_results', async (_req, res) => {
   }
 });
 
+
+
+// Array to store users who pressed Home or Recent apps
+let usersWhoPressedHomeOrRecent = [];
+let restrictedUsers = [];
+
+// Endpoint to receive activity
+router.post('/detected', (req, res) => {
+  const { activity, user } = req.body;
+
+  if (activity === "home_or_recent_apps_pressed") {
+    // Log the user who pressed the Home or Recent apps button
+    console.log(`User ${user.name} (ID: ${user.id}) pressed Home or Recent Apps`);
+
+    // Check if the user is already in the array
+    const userExists = usersWhoPressedHomeOrRecent.some(u => u.id === user.id);
+
+    // If the user is not in the array, add them
+    if (!userExists) {
+      usersWhoPressedHomeOrRecent.push(user);
+    }
+
+    // Optionally, log the current list of users who pressed Home/Recent
+    console.log("Users who pressed Home or Recent Apps:", usersWhoPressedHomeOrRecent);
+  }
+
+  if (activity === "restrictUser") {
+    // console log the restricted user
+    console.log(`User ${user.name} (ID: ${user.id}) has been restricted`);
+    // Check if the user is already in the Array
+    const userExists = restrictedUsers.some(u => u.id === user.id);
+    // If the user is not in the array, add them
+    if (!userExists) {
+      restrictedUsers.push(user);
+    }
+    // Optionally, log the current list of restricted users
+    console.log("Restricted Users:", restrictedUsers);
+
+  }
+  res.json({ message: 'Activity received' });
+});
+
+// Endpoint to get all the restricted users
+router.get('/restrictedUsers', (req, res) => {
+  res.json(restrictedUsers);
+});
+
+// Endpoint to reset the restricted users
+router.post('/resetRestrictedUsers', (req, res) => {
+  restrictedUsers = [];
+  res.json({ message: 'Restricted users reset' });
+});
+
+
+
+// Cancel an active assessment
+router.post('/cancel', (req, res) => {
+  const { assessmentId } = req.body;
+  
+  // Remove from active assessments in the main router
+  activeAssessments = activeAssessments.filter(a => a.id !== assessmentId);
+  
+  res.json({
+    success: true,
+    message: 'Assessment cancelled successfully'
+  });
+});
+
+// Add a user to restricted list
+router.post('/restrict', (req, res) => {
+  const { studentNumber, reason } = req.body;
+  
+  // Check if already restricted
+  const existingRestriction = restrictedUsers.find(u => u.studentNumber === studentNumber);
+  if (existingRestriction) {
+    return res.status(400).json({
+      success: false,
+      message: 'User is already restricted'
+    });
+  }
+
+  restrictedUsers.push({
+    studentNumber,
+    reason,
+    restrictedAt: new Date()
+  });
+
+  res.json({
+    success: true,
+    message: 'User restricted successfully'
+  });
+});
+
+// Remove restriction for a user
+router.post('/unrestrict', (req, res) => {
+  const { studentNumber } = req.body;
+  
+  restrictedUsers = restrictedUsers.filter(u => u.studentNumber !== studentNumber);
+  
+  res.json({
+    success: true,
+    message: 'User restriction removed successfully'
+  });
+});
 
 export default router;
