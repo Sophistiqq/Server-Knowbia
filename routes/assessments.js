@@ -3,11 +3,11 @@ const router = Router();
 import mysql from 'mysql2/promise';
 
 const pool = mysql.createPool({
-  host: "localhost",
-  user: "roi",
-  port: 3306,
-  database: "knowbia",
-  password: "123",
+  host: process.env.HOST,
+  user: process.env.USER,
+  port: process.env.PORT,
+  database: process.env.DATABASE,
+  password: process.env.PASSWORD,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -209,10 +209,10 @@ router.post('/resetRestrictedUsers', (req, res) => {
 // Cancel an active assessment
 router.post('/cancel', (req, res) => {
   const { assessmentId } = req.body;
-  
+
   // Remove from active assessments in the main router
   activeAssessments = activeAssessments.filter(a => a.id !== assessmentId);
-  
+
   res.json({
     success: true,
     message: 'Assessment cancelled successfully'
@@ -222,7 +222,7 @@ router.post('/cancel', (req, res) => {
 // Add a user to restricted list
 router.post('/restrict', (req, res) => {
   const { studentNumber, reason } = req.body;
-  
+
   // Check if already restricted
   const existingRestriction = restrictedUsers.find(u => u.studentNumber === studentNumber);
   if (existingRestriction) {
@@ -247,9 +247,9 @@ router.post('/restrict', (req, res) => {
 // Remove restriction for a user
 router.post('/unrestrict', (req, res) => {
   const { studentNumber } = req.body;
-  
+
   restrictedUsers = restrictedUsers.filter(u => u.studentNumber !== studentNumber);
-  
+
   res.json({
     success: true,
     message: 'User restriction removed successfully'

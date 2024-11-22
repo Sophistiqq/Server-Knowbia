@@ -3,36 +3,15 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const pool = mysql.createPool({
-  host: "localhost",
-  user: "roi",
-  port: 3306,
-  database: "knowbia",
-  password: "123",
+  host: process.env.HOST,
+  user: process.env.USER,
+  port: process.env.PORT,
+  database: process.env.DATABASE,
+  password: process.env.PASSWORD,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
 });
-const connection = mysql.createConnection({
-  host: "localhost",
-  user: "roi",
-  port: 3306,
-  database: "knowbia",
-  password: "123",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
-try {
-  connection.connect((err) => {
-    if (err) {
-      console.error('error connecting: ' + err.stack);
-      return;
-    }
-    console.log('connected as id ' + connection.threadId);
-  });
-} catch (error) {
-  console.log('error connecting: ' + error.stack);
-}
 
 // Teachers table schema
 const createTeachersTable = `CREATE TABLE IF NOT EXISTS teachers (
@@ -122,16 +101,12 @@ const createTables = () => {
   pool.query(createAssessment_results, (err, results) => {
     if (err) {
       console.log(err.message);
-    } else {
-      console.log('Assessment results table created successfully');
     }
   });
 
   pool.query(createAssessments, (err, results) => {
     if (err) {
       console.log(err.message);
-    } else {
-      console.log('Assessments table created successfully');
     }
   });
 };
