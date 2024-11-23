@@ -117,6 +117,24 @@ router.get('/finished', async (_req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+
+// Router to deleteFinishedAssessment
+router.post('/deleteFinished', async (req, res) => {
+  const { assessmentId } = req.body;
+  try {
+    await pool.query('DELETE assessment_results, assessments FROM assessment_results INNER JOIN assessments ON assessment_results.assessment_id = assessments.id WHERE assessments.id = ?', [assessmentId]);
+
+    res.json({
+      success: true,
+      message: 'Finished assessment deleted successfully'
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Endpoint to get data to give to the dashboard
 router.get('/dashboard', async (_req, res) => {
   try {
@@ -160,10 +178,11 @@ let restrictedUsers = [];
 // Endpoint to receive activity
 router.post('/detected', (req, res) => {
   const { activity, user } = req.body;
-
+  console.log('Activity:', activity);
+  console.log('User:', user);
   if (activity === "home_or_recent_apps_pressed") {
     // Log the user who pressed the Home or Recent apps button
-    console.log(`User ${user.name} (ID: ${user.id}) pressed Home or Recent Apps`);
+    //console.log(`User ${user.name} (ID: ${user.id}) pressed Home or Recent Apps`);
 
     // Check if the user is already in the array
     const userExists = usersWhoPressedHomeOrRecent.some(u => u.id === user.id);
@@ -179,9 +198,9 @@ router.post('/detected', (req, res) => {
 
   if (activity === "restrictUser") {
     // console log the restricted user
-    console.log(`User ${user.name} (ID: ${user.id}) has been restricted`);
+    console.log(`User ${user.firstName} (Student Number: ${user.studentNumber}) has been restricted`);
     // Check if the user is already in the Array
-    const userExists = restrictedUsers.some(u => u.id === user.id);
+    const userExists = restrictedUsers.some(u => u.studentNumber === user.studentNumber);
     // If the user is not in the array, add them
     if (!userExists) {
       restrictedUsers.push(user);

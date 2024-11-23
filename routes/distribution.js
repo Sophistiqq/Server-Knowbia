@@ -64,18 +64,6 @@ router.post('/login', async (req, res) => {
   const loginData = req.body;
 
   try {
-    // Check if user is restricted
-    const restrictedResponse = await fetch('http://localhost:3000/assessments/restrictedUsers');
-    const restrictedUsers = await restrictedResponse.json();
-    const isRestricted = restrictedUsers.some(u => u.studentNumber === loginData.studentNumber);
-    
-    if (isRestricted) {
-      return res.status(403).json({
-        success: false,
-        message: 'You are restricted from taking assessments'
-      });
-    }
-
     const [rows] = await pool.query('SELECT * FROM students WHERE studentNumber = ?', [loginData.studentNumber]);
 
     if (rows.length === 0) {
@@ -90,19 +78,6 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({
         success: false,
         message: 'Invalid student number or password'
-      });
-    }
-
-    // Check if student has already taken the assessment
-    const [assessmentResults] = await pool.query(
-      'SELECT * FROM assessment_results WHERE student_number = ? AND assessment_id = ?',
-      [loginData.studentNumber, loginData.assessmentId]
-    );
-
-    if (assessmentResults.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'You have already taken this assessment.'
       });
     }
 
@@ -126,6 +101,47 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.post('/status/:assessmentId', async (req, res) => {
+  const { studentNumber } = req.body;
+  const { assessmentId } = req.params;
+  try {
+    // Check if user is restricted
+    const restrictedResponse = await fetch('http://localhost:3000/assessments/restrictedUsers');
+    const restrictedUsers = await restrictedResponse.json();
+    const isRestricted = restrictedUsers.some(u => u.studentNumber === studentNumber);
+    
+    if (isRestricted) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are restricted from taking assessments'
+      });
+    }
+
+    // Check if student has already taken the assessment
+    const [assessmentResults] = await pool.query(
+      'SELECT * FROM assessment_results WHERE student_number = ? AND assessment_id = ?',
+      [studentNumber, assessmentId]
+    );
+
+    if (assessmentResults.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'You have already taken this assessment.'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'You are eligible to take the assessment'
+    });
+  } catch (error) {
+    console.error('Status check error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Status check failed due to server error'
+    });
+  }
+});
 // Get active assessments
 router.get('/assessments', (req, res) => {
   res.json({
