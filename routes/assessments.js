@@ -170,6 +170,34 @@ router.get('/assessment_results', async (_req, res) => {
 });
 
 
+// PUT endpoint to update score
+router.put('/results/:id', async (req, res) => {
+  const { id } = req.params;
+  const { score } = req.body;
+  
+  try {
+    await pool.query('UPDATE assessment_results SET score = ? WHERE id = ?', [score, id]);
+    res.json({ message: 'Score updated successfully' });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE endpoint to remove record
+router.delete('/results/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await pool.query('DELETE FROM assessment_results WHERE id = ?', [id]);
+    res.json({ message: 'Record deleted successfully' });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 
 // Array to store users who pressed Home or Recent apps
 let usersWhoPressedHomeOrRecent = [];
