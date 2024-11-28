@@ -22,24 +22,10 @@ const createTeachersTable = `CREATE TABLE IF NOT EXISTS teachers (
   email VARCHAR(255) NOT NULL UNIQUE,
   hashed_password VARCHAR(255) NOT NULL,
   phone_number VARCHAR(255),
-  department VARCHAR(255),
-  sex VARCHAR(255),
-  suffix VARCHAR(255),
-  birthdate DATE,
-  verified BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )`;
 
-// Classes table schema
-const createClassesTable = `CREATE TABLE IF NOT EXISTS classes (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  className VARCHAR(255) NOT NULL,
-  section VARCHAR(50) NOT NULL,
-  enrolledStudents INT DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)`;
 
 
 const createStudentsTable = `
@@ -86,11 +72,6 @@ const createTables = () => {
     }
   });
 
-  pool.query(createClassesTable, (err, results) => {
-    if (err) {
-      console.log(err.message);
-    }
-  });
 
   pool.query(createStudentsTable, (err, results) => {
     if (err) {

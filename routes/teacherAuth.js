@@ -9,7 +9,7 @@ import { config } from 'dotenv';
 config();
 const router = Router();
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = "Lee";
 
 // Set up cookie-parser and session middleware
 router.use(cookieParser());
@@ -27,12 +27,12 @@ router.use(session({
 
 // Register route for teachers
 router.post('/register', (req, res) => {
-  const { firstname, lastname, middlename, email, password, phone_number, department, birthdate } = req.body;
+  const { firstname, lastname, middlename, email, password, phone_number} = req.body;
   const hashed_password = hashSync(password, 10);
 
-  const query = `INSERT INTO teachers (firstname, lastname, middlename, email, hashed_password, phone_number, department, birthdate, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, false)`;
+  const query = `INSERT INTO teachers (firstname, lastname, middlename, email, hashed_password, phone_number) VALUES (?, ?, ?, ?, ?, false)`;
 
-  connection.query(query, [firstname, lastname, middlename, email, hashed_password, phone_number, department, birthdate], (err, result) => {
+  connection.query(query, [firstname, lastname, middlename, email, hashed_password, phone_number], (err, result) => {
     if (err) {
       console.error(err);
       const errorMessage = err.code === 'ER_DUP_ENTRY' ? 'The teacher ID or email already exists.' : 'An error occurred during registration.';
