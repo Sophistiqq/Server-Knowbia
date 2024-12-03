@@ -215,11 +215,10 @@ router.post('/results', async (req, res) => {
 
 // Cancel an active assessment
 router.post('/cancel', (req, res) => {
-  const { assessmentId } = req.body;
-  
+  const { id } = req.body;
   // Remove from active assessments in the main router
-  activeAssessments = activeAssessments.filter(a => a.id !== assessmentId);
-  
+  activeAssessments = activeAssessments.filter(assessment => assessment.id !== id);
+
   res.json({
     success: true,
     message: 'Assessment cancelled successfully'
